@@ -23,6 +23,36 @@ jobs:
           xcodebuild -version
           ruby -v
 
+      - name: Configure real credentials (optional)
+        working-directory: ./ZLGitHubClient
+        env:
+          GH_CLIENT_ID: ${{ secrets.GH_OAUTH_CLIENT_ID }}
+          GH_CLIENT_SECRET: ${{ secrets.GH_OAUTH_CLIENT_SECRET }}
+          GH_CALLBACK: ${{ secrets.GH_OAUTH_CALLBACK }}
+          FIREBASE_PLIST_B64: ${{ secrets.GOOGLE_SERVICE_INFO_B64 }}
+        run: |
+          set -euo pipefail
+          HEADER="ZLGitHubClient/System/ZLSupportFiles/ZLGithubAppKey.h"
+          if [ -n "${GH_CLIENT_ID}" ] && [ -n "${GH_CLIENT_SECRET}" ]; then
+            cat > "$HEADER" <<EOF
+          #ifndef ZLGithubAppKey_h
+          #define ZLGithubAppKey_h
+          #define MyClientID @"${GH_CLIENT_ID}"
+          #define MyClientSecret @"${GH_CLIENT_SECRET}"
+          #define MyClientCallback @"${GH_CALLBACK:-githubclient://oauth}"
+          #define ZLRemoteConfigURLDebug @"https://raw.githubusercontent.com/ExistOrLive/GithubClient/master/ZLGithubClientConfig/ZLGithubClientConfig.json"
+          #define ZLRemoteConfigURLRelease @"https://raw.githubusercontent.com/ExistOrLive/GithubClient/master/ZLGithubClientConfig/ZLGithubClientConfig.json"
+          #endif
+          EOF
+            echo "Using real GitHub OAuth credentials from secrets."
+          else
+            echo "No OAuth secrets configured; using committed placeholder header."
+          fi
+          if [ -n "${FIREBASE_PLIST_B64}" ]; then
+            echo "${FIREBASE_PLIST_B64}" | base64 --decode > ZLGitHubClient/GoogleService-Info.plist
+            echo "Using real Firebase plist from secrets."
+          fi
+
       - name: Install CocoaPods and dependencies
         working-directory: ./ZLGitHubClient
         run: |
