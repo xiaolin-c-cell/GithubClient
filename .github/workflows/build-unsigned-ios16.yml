@@ -39,7 +39,7 @@ jobs:
           #define ZLGithubAppKey_h
           #define MyClientID @"${GH_CLIENT_ID}"
           #define MyClientSecret @"${GH_CLIENT_SECRET}"
-          #define MyClientCallback @"${GH_CALLBACK:-githubclient://oauth}"
+          #define MyClientCallback @"${GH_CALLBACK:-ZLGithub://oauth}"
           #define ZLRemoteConfigURLDebug @"https://raw.githubusercontent.com/ExistOrLive/GithubClient/master/ZLGithubClientConfig/ZLGithubClientConfig.json"
           #define ZLRemoteConfigURLRelease @"https://raw.githubusercontent.com/ExistOrLive/GithubClient/master/ZLGithubClientConfig/ZLGithubClientConfig.json"
           #endif
