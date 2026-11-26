@@ -8,7 +8,7 @@
 
 #define MyClientID @"dummy_client_id"
 #define MyClientSecret @"dummy_client_secret"
-#define MyClientCallback @"githubclient://oauth"
+#define MyClientCallback @"ZLGithub://oauth"
 
 #define ZLRemoteConfigURLDebug @"https://raw.githubusercontent.com/ExistOrLive/GithubClient/master/ZLGithubClientConfig/ZLGithubClientConfig.json"
 #define ZLRemoteConfigURLRelease @"https://raw.githubusercontent.com/ExistOrLive/GithubClient/master/ZLGithubClientConfig/ZLGithubClientConfig.json"
