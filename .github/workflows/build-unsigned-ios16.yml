@@ -53,6 +53,23 @@ jobs:
             echo "Using real Firebase plist from secrets."
           fi
 
+      - name: Remove placeholder-config crash sources from startup
+        working-directory: ./ZLGitHubClient
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("ZLGitHubClient/System/ZLAppDelegate/AppDelegate.m")
+          s = p.read_text()
+          s = s.replace("    [FIRApp configure];",
+                        "    // [FIRApp configure]; // disabled for placeholder Firebase config")
+          s = s.replace("    [[ZLRemoteConfigManager sharedInstance] setupManagerWithConfigURL:ZLRemoteConfigURLDebug];",
+                        "    // remote config disabled for unsigned build")
+          s = s.replace("    [[ZLRemoteConfigManager sharedInstance] setupManagerWithConfigURL:ZLRemoteConfigURLRelease];",
+                        "    // remote config disabled for unsigned build")
+          p.write_text(s)
+          print("Patched AppDelegate.m to remove startup crash sources")
+          PY
+
       - name: Install CocoaPods and dependencies
         working-directory: ./ZLGitHubClient
         run: |
