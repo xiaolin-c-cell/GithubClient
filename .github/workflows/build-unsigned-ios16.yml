@@ -1,0 +1,69 @@
+name: Build unsigned IPA (iOS 16.7)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  build:
+    name: Build on macOS runner
+    runs-on: macos-15
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          sw_vers
+          xcodebuild -version
+          ruby -v
+
+      - name: Install CocoaPods and dependencies
+        working-directory: ./ZLGitHubClient
+        run: |
+          gem install cocoapods -v 1.16.2 --no-document
+          pod install --repo-update
+
+      - name: Archive (unsigned, iOS 16.7 deployment target)
+        working-directory: ./ZLGitHubClient
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -workspace ZLGitHubClient.xcworkspace \
+            -scheme ZLGitHubClient \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -archivePath "${RUNNER_TEMP}/ZLGitHubClient.xcarchive" \
+            IPHONEOS_DEPLOYMENT_TARGET=16.7 \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            clean archive
+
+      - name: Package unsigned IPA
+        run: |
+          set -euo pipefail
+          APP="${RUNNER_TEMP}/ZLGitHubClient.xcarchive/Products/Applications/ZLGitHubClient.app"
+          if [ ! -d "$APP" ]; then
+            echo "Expected app bundle not found: $APP"
+            exit 1
+          fi
+          rm -rf "${RUNNER_TEMP}/ipa_payload"
+          mkdir -p "${RUNNER_TEMP}/ipa_payload/Payload"
+          cp -R "$APP" "${RUNNER_TEMP}/ipa_payload/Payload/"
+          cd "${RUNNER_TEMP}/ipa_payload"
+          zip -qry "${RUNNER_TEMP}/ZLGitHubClient-unsigned-ios16.7.ipa" Payload
+          ls -lh "${RUNNER_TEMP}/ZLGitHubClient-unsigned-ios16.7.ipa"
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZLGitHubClient-unsigned-ios16.7
+          path: ${{ runner.temp }}/ZLGitHubClient-unsigned-ios16.7.ipa
+          if-no-files-found: error
+          retention-days: 30
